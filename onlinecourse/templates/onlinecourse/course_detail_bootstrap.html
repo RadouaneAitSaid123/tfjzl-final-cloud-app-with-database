@@ -58,7 +58,9 @@
                 Start Exam
             </button>
             <div id="exam" class="collapse">
-                <form id="questionform" method="post">
+                <form id="questionform"
+                action="{% url 'onlinecourse:submit' course.id %}"
+                method="post">
                     {% csrf_token %}
             
                     {% for question in course.question_set.all %}
