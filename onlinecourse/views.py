@@ -145,14 +145,46 @@ def extract_answers(request):
 
     return selected_ids
 
+@login_required
+def show_exam_result(request, course_id, submission_id):
+    course = get_object_or_404(Course, pk=course_id)
 
-# <HINT> Create an exam result view to check if learner passed exam and show their question results and result for each question,
-# you may implement it based on the following logic:
-        # Get course and submission based on their ids
-        # Get the selected choice ids from the submission record
-        # For each selected choice, check if it is a correct answer or not
-        # Calculate the total score
-#def show_exam_result(request, course_id, submission_id):
+    submission = get_object_or_404(
+        Submission,
+        pk=submission_id,
+        enrollment__user=request.user,
+        enrollment__course=course
+    )
+
+    choices = submission.choices.all()
+    selected_ids = list(choices.values_list('id', flat=True))
+
+    total_score = 0
+    questions = course.question_set.all()
+
+    for question in questions:
+        correct_choices = question.choice_set.filter(
+            is_correct=True
+        )
+
+        selected_choices = question.choice_set.filter(
+            id__in=selected_ids
+        )
+
+        if set(correct_choices) == set(selected_choices):
+            total_score += question.grade
+
+    context = {
+        'course': course,
+        'grade': total_score,
+        'choices': choices
+    }
+
+    return render(
+        request,
+        'onlinecourse/exam_result_bootstrap.html',
+        context
+    )
 
 
 
